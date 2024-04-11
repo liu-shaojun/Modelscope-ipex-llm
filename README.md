@@ -39,7 +39,7 @@ cd /mnt/workspace
 
 ```
 # 安装ipykernel依赖
-conda install -c anaconda ipykernel
+pip install ipykernel
 # 把当前conda环境添加为Jupyter Kernel
 python -m ipykernel install --name=ipex-llm-test
 ```
