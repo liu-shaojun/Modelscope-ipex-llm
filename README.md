@@ -10,44 +10,27 @@
 3. 选择Terminal
 ![1712638629533](image/README/1712638629533.png)
 #### conda虚拟环境准备
+在终端命令行环境中输入下列命令用于在环境目录/opt/conda/envs下
 ```
-conda create --name ipex-llm-test python=3.9
-conda activate ipex-llm-test
-pip install ipex-llm[all]
-pip install modelscope
-pip install --upgrade transformers==4.37.0
+cd  /opt/conda/envs 
+mkdir ipex-llm-2.1.0b20240410
 ```
-如果在创建conda虚拟环境的时候遇到下面的error，请更换conda源
+使用gdown下载google drive上的运行环境镜像文件并在云主机的ipex-llm-2.1.0b20240410目录进行运行环境的恢复
 ```
-The channel is not accessible or is invalid.
-```
-更换方法：
-```
-vim /root/.condarc
-```
-替换为下面的conda源
-```
-channels:
-  - defaults
-custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  msys2: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  menpo: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  simpleitk: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
-show_channel_urls: True
+# 下载文件
+pip install gdown
+gdown https://drive.google.com/uc?id=1BFxkOKevKt7pSKqdKR0M30pfhwYHYV7q
+# 解压文件
+tar -zxvf ipex-llm-2.1.0b20240410.tar.gz -C ipex-llm-2.1.0b20240410/
+# 激活环境
+conda activate ipex-llm-2.1.0b20240410
 ```
 #### 为Jupyter Notebook设置conda虚拟环境
 ```
 # 安装ipykernel依赖
 conda install -c anaconda ipykernel
 # 把当前conda环境添加为Jupyter Kernel
-python -m ipykernel install --user --name=ipex-llm-test
+python -m ipykernel install --name=ipex-llm-test
 ```
 #### 在notebook中使用ipex-llm
 下载[示例notebook文件](https://github.com/Jasonzzt/Modelscope-ipex-llm/blob/main/ipex-llm-test.ipynb)，然后上传到modelscope jupyterlab中，并选择内核ipex-llm-test后运行代码，使用其他模型时可以参考[ipex-llm repo中的example](https://github.com/intel-analytics/ipex-llm/tree/main/python/llm/example/CPU/HF-Transformers-AutoModels/Model)修改代码。
