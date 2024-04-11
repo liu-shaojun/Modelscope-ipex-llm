@@ -24,6 +24,8 @@ gdown https://drive.google.com/uc?id=1BFxkOKevKt7pSKqdKR0M30pfhwYHYV7q
 tar -zxvf ipex-llm-2.1.0b20240410.tar.gz -C ipex-llm-2.1.0b20240410/
 # 激活环境
 conda activate ipex-llm-2.1.0b20240410
+# 切换至工作路径
+cd /mnt/workspace
 ```
 #### 为Jupyter Notebook设置conda虚拟环境
 ```
