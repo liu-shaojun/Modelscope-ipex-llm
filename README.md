@@ -1,4 +1,4 @@
-## Modelscope with IPEX-LLM
+![image](https://github.com/Jasonzzt/Modelscope-ipex-llm/assets/61072813/975936f2-ddf6-4766-bfe1-3046e1ae6eae)## Modelscope with IPEX-LLM
 
 ### Notebook测试环境
 
@@ -13,41 +13,88 @@
 
 #### conda虚拟环境准备
 
-在终端命令行环境中输入下列命令用于在环境目录/opt/conda/envs下
+在终端命令行环境中输入下列命令准备conda环境
 
 ```
-cd  /opt/conda/envs 
-mkdir ipex-llm-2.1.0b20240410
-```
+conda create -n llm-sj python=3.11
+conda activate llm-sj
+pip install --pre --upgrade ipex-llm[all] --extra-index-url https://download.pytorch.org/whl/cpu
+pip install gradio 
+pip install hf-transfer
+pip install transformers_stream_generator einops
+pip install tiktoken
+pip install transformers==4.37.0
 
-下载运行环境镜像文件并在云主机的ipex-llm-2.1.0b20240410目录进行运行环境的恢复
-
-```
-# 下载文件
-wget https://filerepo.idzcn.com/LLM/ipex-llm-2.1.0b20240410.tar.gz
-# 或者
-wget https://idz-ai.oss-cn-hangzhou.aliyuncs.com/LLM/ipex-llm-2.1.0b20240410.tar.gz
-# 解压文件
-tar -zxvf ipex-llm-2.1.0b20240410.tar.gz -C ipex-llm-2.1.0b20240410/
-# 激活环境
-conda activate ipex-llm-2.1.0b20240410
-# 切换至工作路径
-cd /mnt/workspace
-```
-
-#### 为Jupyter Notebook设置conda虚拟环境
-
-```
 # 安装ipykernel依赖
 pip install ipykernel
 # 把当前conda环境添加为Jupyter Kernel
-python -m ipykernel install --name=ipex-llm-test
+python -m ipykernel install --user --name llm-sj --display-name "Python (llm-sj)"
+```
+
+
+#### 准备generate.py脚本
+![image](https://github.com/Jasonzzt/Modelscope-ipex-llm/assets/61072813/70a88b39-2229-4223-b06e-156e81cd91f4)
+
+```
+import torch
+import time
+import os
+from ipex_llm.transformers import AutoModelForCausalLM
+from transformers import AutoTokenizer
+
+model_path = os.path.join(os.getcwd(),"qwen2chat_src")
+model = AutoModelForCausalLM.from_pretrained(model_path, load_in_low_bit='sym_int4', trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+model.save_low_bit('qwen2chat_int4')
+tokenizer.save_pretrained('qwen2chat_int4')
+
+load_path = "qwen2chat_int4"
+model = AutoModelForCausalLM.load_low_bit(load_path, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(load_path, trust_remote_code=True)
+
+
+os.environ["BIGDL_OPT_IPEX"] = "true"
+QWEN_PROMPT_FORMAT = "<human>{prompt} <bot>"
+input_str = "给我讲一个年轻人奋斗创业最终取得成功的故事"
+with torch.inference_mode():
+    prompt = QWEN_PROMPT_FORMAT.format(prompt=input_str)
+    input_ids = tokenizer.encode(prompt, return_tensors="pt")
+    st = time.time()
+    output = model.generate(input_ids,
+                            max_new_tokens=512)
+    end = time.time()
+    output_str = tokenizer.decode(output[0], skip_special_tokens=True)
+    print(f'111Inference time: {end-st} s')
+    print('-'*20, 'Prompt', '-'*20)
+    print(prompt)
+    print('-'*20, 'Output', '-'*20)
+    print(output_str)
+    st = time.time()
+    output = model.generate(input_ids,
+                            max_new_tokens=512)
+    end = time.time()
+    output_str = tokenizer.decode(output[0], skip_special_tokens=True)
+    print(f'222Inference time: {end-st} s')
+    print('-'*20, 'Prompt', '-'*20)
+    print(prompt)
+    print('-'*20, 'Output', '-'*20)
+    print(output_str)
 ```
 
 #### 在notebook中使用ipex-llm
+<img width="945" alt="image" src="https://github.com/Jasonzzt/Modelscope-ipex-llm/assets/61072813/4ba6f1e6-127a-4e65-b7cc-98158b5a8d13">
 
-下载[示例notebook文件](https://github.com/Jasonzzt/Modelscope-ipex-llm/blob/main/ipex-llm-test.ipynb)，然后上传到modelscope jupyterlab中，并选择内核ipex-llm-test后运行代码，使用其他模型时可以参考[ipex-llm repo中的example](https://github.com/intel-analytics/ipex-llm/tree/main/python/llm/example/CPU/HF-Transformers-AutoModels/Model)修改代码。
-![1712643136692](image/README/1712643136692.png)
+```
+%%bash
+# 在 Bash 中激活 Conda 环境并执行命令
+conda run -n llm-sj bash -c '
+    source ipex-llm-init -t  # 执行初始化命令
+    export OMP_NUM_THREADS=32  # 设置环境变量
+    taskset -c 0-31 python /mnt/workspace/generate.py  # 执行 Python 脚本
+'
+```
+![image](https://github.com/Jasonzzt/Modelscope-ipex-llm/assets/61072813/77e50196-858c-4830-bdc7-a565652f3f8c)
+
 
 ### 创空间测试环境
 
